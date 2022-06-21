@@ -1,19 +1,23 @@
 import json, glob, os
 from tqdm import tqdm
+import pathlib
 
+# 문제 1: 절대경로를 가져와서 적용하는 법  /   pathlib를 활용해 해결
+# 문제 2: r['attributes2'] 를 한번씩 탐색 할때마다 경로를 가져와서 결국에는 모든 경로가 가져와짐, 중복도 됨, / cnt를 추가해 해결
 
 def search(target):
     # 찾으려는 attributes
     # 메인 파일 directory
-    # D:\data\자율주행 및 ADAS 인공지능 학습용 데이터\1.Training\원천데이터\주간\주간_성남_01\성남_주간_2021-08-30-17-38-59\Front_View_CMR\2021-08-30-17-38-59_Front_1630312754200.png
+    # .\\1.Training\\원천데이터\\주간\\주간_성남_01\\성남_주간_2021-08-30-17-38-59\\Front_View_CMR\\2021-08-30-17-38-59_Front_1630312754200.png
 
-    dir_path = "./1.Training/**/주간/**/**/**/*.json"  # 경로 수정.
-    dir_path = ".\\1.Training\\**\\주간\\**\\**\\**\\*.json"
-    # dir_path = ".\\**\\**\\**\\**\\**\\*\\*.json"  # 경로 수정
+    # dir_path = "./1.Training/**/주간/**/**/**/*.json"  # 경로 수정.
+    # dir_path = ".\\1.Training\\**\\주간\\**\\**\\**\\*.json"
+    dir_path = ".\\1.Training\\라벨링데이터\\주간\\주간_성남_01\\**\\**\\*.json"  # 경로 수정
     print(dir_path)
     res = []
     del_list = []  # 추가
     json_list = []
+    cnt = 0
 
     # dir_path내 모든 파일 경로 찾기
     for file in glob.glob(dir_path, recursive=True):
@@ -24,6 +28,7 @@ def search(target):
 
     # 파일 열어보면서 응급차가 없는 json 파일 찾기
     for line in tqdm(res):
+        cnt = 0
         try:
             with open(line, 'rt', encoding='UTF8') as f:
                 data = json.load(f)
@@ -32,25 +37,34 @@ def search(target):
             print(line)
             continue
 
-        for r in data['row']:
-            if r['attributes2'] not in target:
-                p = line.split('\\')
-                k = p[-1].split('.')
-                path = p[1] + "\\원천데이터\\" + "\\".join(p[3:6]) + "\\" + ".".join(k[:2])
-                del_list.append(line)
-                del_list.append(path)
-            else:
-                json_list.append(list)
+        for r in data['row']:        # 한개의 json을 스크래핑을 하며 target이 있는지 갯수를 구함
+            if r['attributes2'] in target :
+                cnt += 1
+
+        if cnt > 0:                  # 한개라도 존재 하면 살리는 json
+            json_list.append(list)
+        else:                        # 존재하지 않으면 없애는 json 및 file
+            p = line.split('\\')
+            k = p[-1].split('.')
+            path = "\\" + p[1] + "\\원천데이터\\" + "\\".join(p[3:7]) + "\\" + ".".join(k[:2])
+            del_list.append(line[1:])
+            del_list.append(path)
+
         f.close()
+
+    print(f"총 : {len(json_list)} 개 살림림.")
     print(f"총 : {len(del_list)} 개 삭제.")
     return del_list, json_list, res
 
 
 # json + jpg 같이삭제
 def delete(file_path):
+    root = str(pathlib.Path.cwd())
     for path in tqdm(file_path):
-        if os.path.exists(path):
-            os.remove(path)
+        if os.path.exists(root+path):
+            r = root + path
+            os.remove(r)
+            print("삭제")
         else:
             print("파일 존재 안 함")
 
