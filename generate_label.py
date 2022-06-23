@@ -5,7 +5,6 @@ import shutil
 
 from tqdm import tqdm
 
-# 출저: https://stackoverflow.com/questions/56115874/how-to-convert-bounding-box-x1-y1-x2-y2-to-yolo-style-x-y-w-h
 def box_convert(x1, x2, y1, y2, w, h):
     x_c = str(((x2+x1)/2)/w)
     y_c = str(((y2+y1)/2)/h)
@@ -60,12 +59,11 @@ def json_to_txt(json_file, txtpath, img_dest):
     
     f.close()
     
-
+# json파일이 모여있느 파일 디렉토리
 json_dir_path = './교통CCTV인공지능학습용데이터_Train/1.Training/라벨링데이터/**/**/**/*.json'
-# json_dir_path = './RoadData/야간/야간_성남_01/**/**/*.json'
-
-# img_path = './교통CCTV인공지능학습용데이터_Train/1.Training/원천데이터/**/**/**/*.jpg'
+# txt파일으 저장하 파일 디렉토리
 txtpath = './labels/'
+# 응급차가 담겨있느 이미지르 따로 저장할 파이 디럭토리
 img_dest = './images/'
 
 for file in tqdm(glob.glob(json_dir_path, recursive=True), desc="Emergency Vehicle txt file extraction"):
